@@ -1,10 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 # ─────────────────────────────────────────────────────────────────────────────
 # launcher.spec — PyInstaller spec para GSEQuant Launcher
-# El launcher resultante pesa ~5-8 MB (sin PyQt5, solo tkinter + stdlib)
-#
-# Compilar con:
-#     pyinstaller launcher.spec --noconfirm
 # ─────────────────────────────────────────────────────────────────────────────
 
 a = Analysis(
@@ -25,19 +21,9 @@ a = Analysis(
     hooksconfig={},
     runtime_hooks=[],
     excludes=[
-        # Excluimos todo lo que NO necesita el launcher para mantenerlo liviano
-        'PyQt5',
-        'PyQt6',
-        'PySide2',
-        'PySide6',
-        'numpy',
-        'pandas',
-        'matplotlib',
-        'scipy',
-        'networkx',
-        'PIL',
-        'cv2',
-        'sklearn',
+        'PyQt5', 'PyQt6', 'PySide2', 'PySide6',
+        'numpy', 'pandas', 'matplotlib', 'scipy',
+        'networkx', 'PIL', 'cv2', 'sklearn',
     ],
     noarchive=False,
     optimize=0,
@@ -58,7 +44,7 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=False,           # Sin ventana de consola
+    console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,

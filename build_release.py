@@ -43,7 +43,6 @@ VERSION_FILE = BASE / "version.json"
 APP_EXE_NAME = "GSEQuant_PRO.exe"
 APP_FOLDER_NAME = "GSEQuant_PRO"
 
-# URL base de GitHub Releases (cambia TU_USUARIO y NOMBRE_REPO)
 GITHUB_USER = "logtechmoney"
 GITHUB_REPO = "GSEQuant_PRO"
 GITHUB_RELEASES_BASE = f"https://github.com/{GITHUB_USER}/{GITHUB_REPO}/releases/latest/download"
@@ -103,7 +102,6 @@ def create_release_zip(version: str, zip_name: str):
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as zf:
         for item in compiled_dir.rglob("*"):
             if item.is_file():
-                # No incluimos datos del usuario en el release
                 if item.name in ("user_config.json", "installed_version.json"):
                     continue
                 arcname = item.relative_to(DIST_DIR)
@@ -150,19 +148,14 @@ def main():
     print(f"  ╚══════════════════════════════════════╝")
     print()
 
-    # 1. Actualizar version.json
     zip_name = update_version_json(version, args.notes)
 
-    # 2. Compilar (opcional)
     if not args.no_compile:
         compile_app()
     else:
         print("ℹ Compilacion omitida (--no-compile)")
 
-    # 3. Crear ZIP de release
     zip_path = create_release_zip(version, zip_name)
-
-    # 4. Instrucciones finales
     print_instructions(version, zip_path)
 
 

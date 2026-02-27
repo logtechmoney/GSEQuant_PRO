@@ -1,0 +1,13 @@
+# PyInstaller output
+dist/
+build/
+releases/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Datos de usuario
+installed_version.json
+user_config.json
