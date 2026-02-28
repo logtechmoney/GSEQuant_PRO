@@ -55,13 +55,15 @@ LAUNCHER_VERSION = "1.0.0"
 
 
 def get_base_dir() -> Path:
-    """Directorio donde vive el launcher (y donde se instalara la app)."""
-    if getattr(sys, "frozen", False):
-        # Corriendo como .exe compilado
-        return Path(sys.executable).parent
+    """Directorio de instalación seguro en LOCALAPPDATA (para no ensuciar el escritorio)."""
+    appdata = os.getenv("LOCALAPPDATA")
+    if appdata:
+        base = Path(appdata) / "GTA_GSEQuant_PRO"
     else:
-        # Corriendo como script .py
-        return Path(__file__).parent
+        base = Path.home() / "GTA_GSEQuant_PRO"
+    
+    base.mkdir(parents=True, exist_ok=True)
+    return base
 
 
 def get_installed_version(base_dir: Path) -> str:
@@ -210,7 +212,12 @@ class LauncherWindow(tk.Tk):
         self.configure(bg=self.COLORS["bg"])
         self.overrideredirect(False)
         # Icono (si existe)
-        icon_path = self.base_dir / "gse_app_icon.png"
+        if getattr(sys, "frozen", False):
+            my_dir = Path(getattr(sys, "_MEIPASS", sys.executable))
+        else:
+            my_dir = Path(__file__).parent
+        icon_path = my_dir / "gse_app_icon.png"
+        
         if icon_path.exists():
             try:
                 img = tk.PhotoImage(file=str(icon_path))
