@@ -128,11 +128,24 @@ def download_file(url: str, dest: Path, progress_callback=None) -> bool:
         return False
 
 
-def extract_zip(zip_path: Path, dest_dir: Path) -> bool:
-    """Extrae un ZIP en el directorio destino."""
+def extract_and_install(zip_path: Path, dest_dir: Path, progress_callback=None) -> bool:
+    """Extrae un ZIP directamente en el directorio destino filtrando archivos de config."""
+    KEEP_LOCAL = {"user_config.json", LOCAL_VERSION_FILE}
     try:
         with zipfile.ZipFile(zip_path, "r") as zf:
-            zf.extractall(dest_dir)
+            members = zf.infolist()
+            total = len(members)
+            for i, info in enumerate(members):
+                file_name = Path(info.filename).name
+                if file_name not in KEEP_LOCAL:
+                    zf.extract(info, dest_dir)
+                
+                # Reportar progreso a la UI cada cierta cantidad para no saturar
+                if progress_callback and i % 50 == 0:
+                    progress_callback(int((i / total) * 100))
+                    
+            if progress_callback:
+                progress_callback(100)
         return True
     except Exception as e:
         print(f"Error extrayendo ZIP: {e}")
@@ -408,18 +421,18 @@ class LauncherWindow(tk.Tk):
                     self.after(3000, lambda: self._launch_and_close(base, app_exe))
                 return
 
-            # 5) Extraer y copiar
-            self.set_status("Instalando actualización...", "Extrayendo archivos...")
+            # 5) Extraer directo a base_dir
+            self.set_status("Instalando actualización...", "Extrayendo archivos finales...")
             self.set_progress_indeterminate()
-
-            ok = extract_zip(zip_dest, tmp_path / "extracted")
+            
+            def _install_prog(pct):
+                self.set_status(f"Instalando... {pct}%", "Descomprimiendo archivos...")
+                self.set_progress(pct, mode="determinate")
+            
+            ok = extract_and_install(zip_dest, base, progress_callback=_install_prog)
             if not ok:
-                self.set_status("Error al extraer el archivo", "", C["error"])
+                self.set_status("Error al instalar", "Permisos insuficientes o disco lleno.", C["error"])
                 return
-
-            # Copiar archivos del zip al directorio base
-            extracted = tmp_path / "extracted"
-            self._copy_update_files(extracted, base)
 
         # 6) Guardar version instalada
         set_installed_version(base, remote_v)
