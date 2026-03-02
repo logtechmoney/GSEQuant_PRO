@@ -1,8 +1,8 @@
 {
   "version": "1.0.0",
-  "release_date": "2026-03-01",
+  "release_date": "2026-03-02",
   "download_url": "https://github.com/logtechmoney/GSEQuant_PRO/releases/latest/download/GSEQuant_PRO_v1.0.0.zip",
-  "release_notes": "Version Release Final 1.0",
+  "release_notes": "Fix Logo e Iconos",
   "min_launcher_version": "1.0.0",
   "app_exe_name": "GSEQuant_PRO.exe"
 }
