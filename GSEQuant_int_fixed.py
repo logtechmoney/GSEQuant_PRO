@@ -3866,120 +3866,158 @@ class MainWindow(QtWidgets.QMainWindow):
             "QPushButton:disabled {background-color:#E3F2FD; color:#90CAF9; border:1px solid #BBDEFB;}"
         )
 
-        # Botones
-        self.btnExportNodesCSV = QtWidgets.QPushButton("Exportar nodos a CSV…"); self.btnExportNodesCSV.setStyleSheet(base_btn_style)
-        self.btnCopyNodes = QtWidgets.QPushButton("Copiar nodos (CSV)"); self.btnCopyNodes.setStyleSheet(base_btn_style)
-        self.btnDeleteNode = QtWidgets.QPushButton("Eliminar fila seleccionada"); self.btnDeleteNode.setStyleSheet(base_btn_style)
-        self.btnCalcEmisServicio = QtWidgets.QPushButton("Calcular emisiones por servicio"); self.btnCalcEmisServicio.setStyleSheet(primary_green_style)
-        self.btnCalcEmisServicio.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_DialogApplyButton))
-        self.btnCalcEmisServicio.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnCalcEmisServicio.setToolTip(
-            "Calcula las emisiones en servicio para cada GSE usando el histórico de operaciones y la configuración de puestos/hubs.\n"
-            "Se habilita cuando: (1) se cargó una planilla de operaciones (Excel) compatible y (2) existe una tabla/distribución de puestos (circulación) real,\n"
-            "ya sea cargada desde Excel o generada/guardada desde el grafo."
+        # ── Helper para crear ToolButtons compactos (icono + label corto + tooltip) ──
+        _TB_STYLE = (
+            "QToolButton {border:1px solid #C7CCD1; border-radius:4px; background:#FAFBFC;"
+            " padding:4px 8px; color:#222; font-size:8pt; font-family:'Segoe UI';}"
+            "QToolButton:hover {background:#E8F0FE; border-color:#90A4AE;}"
+            "QToolButton:pressed {background:#D2E3FC;}"
+            "QToolButton:disabled {background:#F5F5F5; color:#BDBDBD; border-color:#E0E0E0;}"
         )
-        # Botones relacionados con circulación
-        self.btnCirculacionLoadExcel = QtWidgets.QPushButton("Cargar planilla circulación (Excel)…")
-        self.btnCirculacionLoadExcel.setStyleSheet(base_btn_style)
-        self.btnCirculacionLoadExcel.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_DirOpenIcon))
-        self.btnCirculacionLoadExcel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        # Botón discreto (tipo tool button) para captura desde grafo, al costado del Excel
-        self.btnCirculacionFromGraph = QtWidgets.QToolButton()
-        self.btnCirculacionFromGraph.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_FileDialogInfoView))
-        self.btnCirculacionFromGraph.setToolTip("Capturar/editar tabla de circulación desde el grafo")
-        self.btnCirculacionFromGraph.setAutoRaise(True)
-        self.btnCirculacionFromGraph.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnCirculacionFromGraph.setFixedSize(22, 22)
-        self.btnCirculacionFromGraph.setPopupMode(QtWidgets.QToolButton.InstantPopup)
+        _TB_GREEN = (
+            "QToolButton {border:1px solid #2E7D32; border-radius:4px; color:#fff; font-size:8pt; font-family:'Segoe UI';"
+            " background:qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 #43A047,stop:1 #2E7D32); padding:4px 8px;}"
+            "QToolButton:hover {background:#388E3C;}"
+            "QToolButton:pressed {background:#1B5E20;}"
+            "QToolButton:disabled {background:#E8F5E9; color:#A5D6A7; border-color:#C8E6C9;}"
+        )
+        _TB_BLUE = (
+            "QToolButton {border:1px solid #1565C0; border-radius:4px; color:#fff; font-size:8pt; font-family:'Segoe UI'; font-weight:600;"
+            " background:qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 #42A5F5,stop:1 #1565C0); padding:4px 8px;}"
+            "QToolButton:hover {background:#1976D2;}"
+            "QToolButton:pressed {background:#0D47A1;}"
+            "QToolButton:disabled {background:#E3F2FD; color:#90CAF9; border-color:#BBDEFB;}"
+        )
+        _TB_ORANGE = (
+            "QToolButton {border:1px solid #EF6C00; border-radius:4px; color:#E65100; font-size:8pt; font-family:'Segoe UI'; font-weight:600;"
+            " background:#FFF3E0; padding:4px 8px;}"
+            "QToolButton:hover {background:#FFE0B2;}"
+            "QToolButton:pressed {background:#FFCC80;}"
+        )
+
+        def _tb(icon_enum, label: str, tooltip: str, style: str = _TB_STYLE,
+                fixed_w: int = 0, enabled: bool = True, popup_mode=None) -> QtWidgets.QToolButton:
+            b = QtWidgets.QToolButton()
+            b.setIcon(self.style().standardIcon(icon_enum))
+            b.setIconSize(QtCore.QSize(15, 15))
+            b.setText(label)
+            b.setToolTip(tooltip)
+            b.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
+            b.setStyleSheet(style)
+            b.setFixedHeight(28)
+            b.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+            b.setEnabled(enabled)
+            if fixed_w > 0:
+                b.setFixedWidth(fixed_w)
+            if popup_mode is not None:
+                b.setPopupMode(popup_mode)
+            return b
+
+        # ── Grupo: Datos de nodos ──
+        self.btnExportNodesCSV = _tb(
+            QtWidgets.QStyle.SP_DialogSaveButton, "CSV↓",
+            "Exportar nodos a CSV\n"
+            "Guarda la tabla de nodos activa como archivo .csv en disco."
+        )
+        self.btnCopyNodes = _tb(
+            QtWidgets.QStyle.SP_FileDialogContentsView, "Copiar",
+            "Copiar nodos al portapapeles\n"
+            "Copia la tabla de nodos en formato CSV para pegar en Excel u otra aplicación."
+        )
+
+        # ── Grupo: Gestión ──
+        self.btnDeleteNode = _tb(
+            QtWidgets.QStyle.SP_TrashIcon, "Eliminar",
+            "Eliminar nodo seleccionado\n"
+            "Borra la fila seleccionada en la tabla de nodos junto con sus rutas asociadas."
+        )
+
+        # ── Grupo: Operaciones (cargar Excel) ──
+        self.btnLoadOpsExcel = _tb(
+            QtWidgets.QStyle.SP_DirOpenIcon, "Ops XLS",
+            "Cargar planilla de operaciones (Excel)\n"
+            "Abre un archivo .xlsx con el historial de vuelos/operaciones.\n\n"
+            "Columnas esperadas (fila 1):\n"
+            "  DIA · TIPOVUELO · Tipo de operación · Aerolinea\n"
+            "  Aeronave · Nro vuelo · Puerta · Hora IN · Hora OUT · TIPO SER"
+        )
+        self.btnPreviewOps = _tb(
+            QtWidgets.QStyle.SP_FileDialogInfoView, "Vista",
+            "Previsualizar operaciones cargadas\n"
+            "Muestra las primeras 10 filas del Excel de operaciones para verificar la estructura.",
+            enabled=False
+        )
+        self.btnSimParams = _tb(
+            QtWidgets.QStyle.SP_ComputerIcon, "Params",
+            "Parámetros de simulación por vehículo\n"
+            "Configura los factores de ajuste de emisiones en servicio para cada tipo de GSE."
+        )
+
+        # ── Grupo: Cálculo servicio ──
+        self.btnCalcEmisServicio = _tb(
+            QtWidgets.QStyle.SP_DialogApplyButton, "▶ Servicio",
+            "Calcular emisiones en servicio\n"
+            "Calcula las emisiones GSE generadas durante las operaciones de servicio a aeronaves.\n\n"
+            "Requiere: (1) planilla de operaciones cargada y (2) tabla de circulación disponible.",
+            style=_TB_GREEN, enabled=False
+        )
+
+        # ── Grupo: Circulación ──
+        self.btnCirculacionLoadExcel = _tb(
+            QtWidgets.QStyle.SP_DirOpenIcon, "Circ XLS",
+            "Cargar planilla de circulación (Excel)\n"
+            "Abre un archivo .xlsx con la distribución de puestos y tiempos de circulación por GSE."
+        )
+        self.btnCirculacionFromGraph = _tb(
+            QtWidgets.QStyle.SP_FileDialogDetailedView, "Grafo▾",
+            "Tabla de circulación desde el grafo\n"
+            "Genera o edita la tabla de circulación a partir de la red de nodos y rutas activa.\n"
+            "► Generar tabla desde grafo\n► Editar tabla de circulación…",
+            popup_mode=QtWidgets.QToolButton.InstantPopup
+        )
         circ_menu = QtWidgets.QMenu(self)
         act_capture = circ_menu.addAction("Generar tabla desde grafo")
         act_capture.triggered.connect(self._capture_circulation_from_graph)
         act_edit = circ_menu.addAction("Editar tabla de circulación…")
         act_edit.triggered.connect(self._open_circulation_editor)
         self.btnCirculacionFromGraph.setMenu(circ_menu)
-        self.btnCalcEmisCirculacion = QtWidgets.QPushButton("Calcular emisiones por circulación")
-        self.btnCalcEmisCirculacion.setStyleSheet(primary_green_style)
-        self.btnCalcEmisCirculacion.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_BrowserReload))
-        self.btnCalcEmisCirculacion.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnCalcEmisCirculacion.setToolTip(
-            "Calcula las emisiones por circulación usando la red de nodos y la tabla de circulación.\n"
-            "Se habilita cuando se carga una planilla de operaciones (Excel) y existe una tabla de circulación\n"
-            "(cargada desde Excel o generada/guardada desde el grafo)."
+        self.btnCircParams = _tb(
+            QtWidgets.QStyle.SP_FileDialogListView, "FC/vel",
+            "Parámetros de circulación por GSE\n"
+            "Configura el factor de consumo de combustible (FC_CIR) y la velocidad media de cada vehículo."
+        )
+        self.btnCalcEmisCirculacion = _tb(
+            QtWidgets.QStyle.SP_BrowserReload, "▶ Circ",
+            "Calcular emisiones por circulación\n"
+            "Calcula las emisiones GSE generadas durante los desplazamientos en plataforma.\n\n"
+            "Requiere: planilla de operaciones + tabla de circulación (Excel o desde grafo).",
+            style=_TB_GREEN, enabled=False
         )
 
-        # Simulación sintética de circulación (siempre disponible, separada de los cálculos reales)
-        self.btnSyntheticCirc = QtWidgets.QPushButton("Simulación sintética de circulación…")
-        self.btnSyntheticCirc.setStyleSheet(
-            "QPushButton {padding:6px 16px; border:1px solid #FF9800; border-radius:4px; color:#FF6F00;"
-            " background-color:#FFF3E0; font-weight:600;}"
-            "QPushButton:hover {background-color:#FFE0B2;}"
-            "QPushButton:pressed {background-color:#FFCC80;}"
+        # ── Grupo: Total integral ──
+        self.btnCalcEmisTotal = _tb(
+            QtWidgets.QStyle.SP_DialogApplyButton, "▶ Total",
+            "Calcular emisiones totales (servicio + circulación)\n"
+            "Suma y presenta las emisiones integrales de ambos módulos para cada GSE.\n\n"
+            "Requiere que ambos cálculos parciales estén disponibles.",
+            style=_TB_BLUE, enabled=False
         )
-        self.btnSyntheticCirc.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MessageBoxWarning))
-        self.btnSyntheticCirc.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnSyntheticCirc.setToolTip(
-            "Ejecuta una prueba sintética de circulación con datos de ejemplo.\n"
-            "No utiliza las operaciones reales ni la tabla de circulación real.\n"
-            "Úselo sólo para entender el funcionamiento del modelo."
+        self.btnDateFilter = _tb(
+            QtWidgets.QStyle.SP_FileDialogToParent, "Fechas",
+            "Filtrar por rango de fechas\n"
+            "Restringe los cálculos al período seleccionado dentro de la planilla de operaciones."
         )
 
-        self.btnCalcEmisTotal = QtWidgets.QPushButton("Calcular emisiones totales (servicio + circulación)")
-        self.btnCalcEmisTotal.setStyleSheet(total_blue_style)
-        self.btnCalcEmisTotal.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_DialogApplyButton))
-        self.btnCalcEmisTotal.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnCalcEmisTotal.setToolTip(
-            "Calcula el total de emisiones combinando servicio + circulación para cada GSE.\n"
-            "Se habilita cuando se cargan operaciones (Excel) y se dispone de una tabla de circulación real."
+        # ── Grupo: Simulación sintética ──
+        self.btnSyntheticCirc = _tb(
+            QtWidgets.QStyle.SP_MessageBoxWarning, "Test",
+            "Simulación sintética de circulación (DEMO)\n"
+            "Ejecuta el modelo con datos de ejemplo generados automáticamente.\n"
+            "NO usa operaciones reales. Útil para verificar el funcionamiento del módulo.",
+            style=_TB_ORANGE
         )
 
-        self.btnDateFilter = QtWidgets.QPushButton("Filtrar por fechas…")
-        self.btnDateFilter.setStyleSheet(base_btn_style)
-        self.btnDateFilter.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_FileDialogToParent))
-        self.btnDateFilter.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnDateFilter.setToolTip(
-            "Limita los cálculos de emisiones al rango de fechas seleccionado en la tabla de operaciones."
-        )
-
-        # Tamaño y políticas (auto-ajustable: el texto siempre debe leerse completo)
-        for b in (self.btnExportNodesCSV, self.btnCopyNodes, self.btnDeleteNode, self.btnCalcEmisServicio,
-                  self.btnCirculacionLoadExcel, self.btnCalcEmisCirculacion, self.btnCalcEmisTotal, self.btnSyntheticCirc):
-            b.setMinimumHeight(28)
-            b.setIconSize(QtCore.QSize(14, 14))
-            b.setFont(QtGui.QFont("Segoe UI", 8))
-            b.setSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
-            b.setMinimumWidth(b.sizeHint().width())  # nunca cortar el texto
-
-        # Botón para cargar Excel (neutro) y habilitar cálculo sólo cuando haya archivo válido
-        self.btnLoadOpsExcel = QtWidgets.QPushButton("Cargar operaciones (Excel)…")
-        self.btnLoadOpsExcel.setStyleSheet(base_btn_style)
-        self.btnLoadOpsExcel.setMinimumHeight(30)
-        self.btnLoadOpsExcel.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_DirOpenIcon))
-        self.btnLoadOpsExcel.setIconSize(QtCore.QSize(16,16))
-        self.btnLoadOpsExcel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnLoadOpsExcel.setToolTip(
-            "Estructura sugerida (fila 1):\n"
-            "A: DIA\nB: TIPOVUELO\nC: Tipo de operación\nD: Aerolinea\nE: Aeronave\n"
-            "F: Numero de vuelo\nG: Puerta asignada\nH: Hora IN GATE\nI: Hora OUT Gate\nJ: TIPO  SER\n\n"
-            "Se leerá la primera hoja del archivo."
-        )
-        # El cálculo debe esperar a que se cargue un Excel válido
-        self.btnCalcEmisServicio.setEnabled(False)
-
-        # Botón para cargar Excel (neutro) y habilitar cálculo/preview sólo cuando haya archivo válido
-        self.btnLoadOpsExcel = QtWidgets.QPushButton("Cargar operaciones (Excel)…")
-        self.btnLoadOpsExcel.setStyleSheet(base_btn_style)
-        self.btnLoadOpsExcel.setMinimumHeight(30)
-        self.btnLoadOpsExcel.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_DirOpenIcon))
-        self.btnLoadOpsExcel.setIconSize(QtCore.QSize(16,16))
-        self.btnLoadOpsExcel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        # Botón de previsualización opcional
-        self.btnPreviewOps = QtWidgets.QPushButton("Previsualizar operaciones…")
-        self.btnPreviewOps.setStyleSheet(base_btn_style)
-        self.btnPreviewOps.setMinimumHeight(30)
-        self.btnPreviewOps.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_FileDialogInfoView))
-        self.btnPreviewOps.setIconSize(QtCore.QSize(16,16))
-        self.btnPreviewOps.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        # El cálculo/preview deben esperar a que se cargue un Excel válido
+        # Los botones ya están creados arriba con _tb(); solo aseguramos los estados iniciales
         self.btnCalcEmisServicio.setEnabled(False)
         self.btnCalcEmisCirculacion.setEnabled(False)
         self.btnCalcEmisTotal.setEnabled(False)
@@ -4005,38 +4043,33 @@ class MainWindow(QtWidgets.QMainWindow):
                 w.setMaximumWidth(maxw)
             return w
 
-        grpDatos = column_group("Datos de nodos", [self.btnExportNodesCSV, self.btnCopyNodes])
+        # Fila horizontal compacta para datos
+        row_datos = QtWidgets.QWidget()
+        row_datos_lay = QtWidgets.QHBoxLayout(row_datos)
+        row_datos_lay.setContentsMargins(0,0,0,0)
+        row_datos_lay.setSpacing(4)
+        row_datos_lay.addWidget(self.btnExportNodesCSV)
+        row_datos_lay.addWidget(self.btnCopyNodes)
+        row_datos_lay.addStretch(1)
+        grpDatos = column_group("Nodos", [row_datos])
 
-        self.btnImportExcelConfig = QtWidgets.QPushButton("Importar Config (Excel)…")
-        self.btnImportExcelConfig.setToolTip("Carga EF, GSE x Aeronave o Coeficientes desde un Excel externo.")
+        self.btnImportExcelConfig = _tb(
+            QtWidgets.QStyle.SP_DialogOpenButton, "Cfg XLS",
+            "Importar configuración desde Excel\n"
+            "Carga tablas de Factores de Emisión, GSE×Aeronave o Coeficientes de vehículos"
+            " desde un archivo Excel externo."
+        )
         self.btnImportExcelConfig.clicked.connect(self._import_config_from_excel)
 
-        grpGestion = column_group("Gestión", [self.btnDeleteNode, self.btnImportExcelConfig])
-        # Fila compacta: botón cargar + icono de información (preview)
-        ops_row = QtWidgets.QWidget()
-        ops_row_lay = QtWidgets.QHBoxLayout(ops_row)
-        ops_row_lay.setContentsMargins(0,0,0,0)
-        ops_row_lay.setSpacing(6)
-        ops_row_lay.addWidget(self.btnLoadOpsExcel)
-        self.btnPreviewOps = QtWidgets.QToolButton()
-        self.btnPreviewOps.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MessageBoxInformation))
-        self.btnPreviewOps.setToolTip(
-            "Previsualizar operaciones (muestra 10 primeras filas).\n\n"
-            "Estructura sugerida (fila 1):\n"
-            "A: DIA\nB: TIPOVUELO\nC: Tipo de operación\nD: Aerolinea\nE: Aeronave\n"
-            "F: Numero de vuelo\nG: Puerta asignada\nH: Hora IN GATE\nI: Hora OUT Gate\nJ: TIPO  SER"
-        )
-        self.btnPreviewOps.setAutoRaise(True)
-        self.btnPreviewOps.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnPreviewOps.setEnabled(False)
-        self.btnPreviewOps.setFixedSize(22, 22)
-        # Botón engranaje: parámetros de simulación
-        self.btnSimParams = QtWidgets.QToolButton()
-        self.btnSimParams.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_ComputerIcon))
-        self.btnSimParams.setToolTip("Parámetros de simulación (por vehículo)")
-        self.btnSimParams.setAutoRaise(True)
-        self.btnSimParams.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        # Columna izquierda: operaciones (arriba: cargar+iconos, abajo: calcular servicio)
+        row_gest = QtWidgets.QWidget()
+        row_gest_lay = QtWidgets.QHBoxLayout(row_gest)
+        row_gest_lay.setContentsMargins(0,0,0,0)
+        row_gest_lay.setSpacing(4)
+        row_gest_lay.addWidget(self.btnDeleteNode)
+        row_gest_lay.addWidget(self.btnImportExcelConfig)
+        row_gest_lay.addStretch(1)
+        grpGestion = column_group("Gestión", [row_gest])
+        # Columna izquierda: operaciones
         col_ops = QtWidgets.QWidget()
         col_ops_lay = QtWidgets.QVBoxLayout(col_ops)
         col_ops_lay.setContentsMargins(0,0,0,0)
@@ -4083,13 +4116,6 @@ class MainWindow(QtWidgets.QMainWindow):
         row_circ_top_lay.setSpacing(4)
         row_circ_top_lay.addWidget(self.btnCirculacionLoadExcel)
         row_circ_top_lay.addWidget(self.btnCirculacionFromGraph)
-        # Botón para parámetros de circulación (FC_CIR y velocidad)
-        self.btnCircParams = QtWidgets.QToolButton()
-        self.btnCircParams.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_ComputerIcon))
-        self.btnCircParams.setToolTip("Parámetros de circulación por GSE (FC_CIR y velocidad)")
-        self.btnCircParams.setAutoRaise(True)
-        self.btnCircParams.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnCircParams.setFixedSize(22, 22)
         row_circ_top_lay.addWidget(self.btnCircParams)
         row_circ_top_lay.addStretch(1)
 
@@ -4169,8 +4195,18 @@ class MainWindow(QtWidgets.QMainWindow):
         self.btnCalcEmisTotal.clicked.connect(self.open_total_emissions_dialog)
         self.btnCircParams.clicked.connect(self._open_circ_params)
         self.btnSyntheticCirc.clicked.connect(self.open_synthetic_circulation_dialog)
-        self.btnStepSim = QtWidgets.QPushButton("Simulación Step-by-Step…")
-        self.btnStepSim.setStyleSheet("background-color: #e1f5fe; border: 1px solid #01579b;")
+        self.btnStepSim = _tb(
+            QtWidgets.QStyle.SP_MediaSeekForward, "Step",
+            "Simulación paso a paso (Step-by-Step)\n"
+            "Ejecuta el modelo de circulación de forma interactiva, un evento a la vez,"
+            " para depuración y análisis detallado.",
+            style=(
+                "QToolButton {border:1px solid #01579b; border-radius:4px; background:#E1F5FE;"
+                " color:#01579b; font-size:8pt; font-family:'Segoe UI'; padding:4px 8px;}"
+                "QToolButton:hover {background:#B3E5FC;}"
+                "QToolButton:pressed {background:#81D4FA;}"
+            )
+        )
         self.btnStepSim.clicked.connect(self.open_step_by_step_sim)
         grpSynthetic_lay = grpSynthetic.layout()
         if grpSynthetic_lay: grpSynthetic_lay.addWidget(self.btnStepSim)
