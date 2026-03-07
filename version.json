@@ -1,8 +1,8 @@
 {
-  "version": "1.0.1",
-  "release_date": "2026-03-02",
-  "download_url": "https://github.com/logtechmoney/GSEQuant_PRO/releases/latest/download/GSEQuant_PRO_v1.0.1.zip",
-  "release_notes": "Correccion de Iconos y Splash Logo",
+  "version": "1.0.2",
+  "release_date": "2026-03-07",
+  "download_url": "https://github.com/logtechmoney/GSEQuant_PRO/releases/latest/download/GSEQuant_PRO_v1.0.2.zip",
+  "release_notes": "Fix: pandas/openpyxl incluidos en el exe (carga Excel funcional); botones del modulo Calculo auto-ajustables (texto siempre visible)",
   "min_launcher_version": "1.0.0",
   "app_exe_name": "GSEQuant_PRO.exe"
 }
