@@ -1,8 +1,8 @@
 {
-  "version": "1.0.2",
+  "version": "1.0.3",
   "release_date": "2026-03-07",
-  "download_url": "https://github.com/logtechmoney/GSEQuant_PRO/releases/latest/download/GSEQuant_PRO_v1.0.2.zip",
-  "release_notes": "v1.0.2: Rediseño compacto de barra herramientas (ToolButtons con iconos/tooltips); Fix dependencias Excel (pandas/openpyxl); Fix dependencias networkx/requests.",
+  "download_url": "https://github.com/logtechmoney/GSEQuant_PRO/releases/latest/download/GSEQuant_PRO_v1.0.3.zip",
+  "release_notes": "v1.0.3: Fix critico - pandas/openpyxl ahora incluidos correctamente en el exe compilado.",
   "min_launcher_version": "1.0.0",
   "app_exe_name": "GSEQuant_PRO.exe"
 }
