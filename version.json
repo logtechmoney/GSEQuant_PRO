@@ -1,8 +1,8 @@
 {
-  "version": "1.0.4",
-  "release_date": "2026-03-10",
-  "download_url": "https://github.com/logtechmoney/GSEQuant_PRO/releases/latest/download/GSEQuant_PRO_v1.0.4.zip",
-  "release_notes": "Features: Tiempos de servicio, circulacion y Aeronaves asistidas. Bugfixes: Sesiones y errores de operaciones. Ruteo continuo",
+  "version": "1.0.4.2",
+  "release_date": "2026-03-11",
+  "download_url": "https://github.com/logtechmoney/GSEQuant_PRO/releases/latest/download/GSEQuant_PRO_v1.0.4.2.zip",
+  "release_notes": "Hotfix 2: Arreglo definitivo para el Crash de Circulacion al regenerar los objetos de base de datos de los gases.",
   "min_launcher_version": "1.0.0",
   "app_exe_name": "GSEQuant_PRO.exe"
 }
