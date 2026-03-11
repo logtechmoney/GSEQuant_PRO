@@ -1,8 +1,8 @@
 {
-  "version": "1.0.3",
-  "release_date": "2026-03-07",
-  "download_url": "https://github.com/logtechmoney/GSEQuant_PRO/releases/latest/download/GSEQuant_PRO_v1.0.3.zip",
-  "release_notes": "v1.0.3: Fix critico - pandas/openpyxl ahora incluidos correctamente en el exe compilado.",
+  "version": "1.0.4",
+  "release_date": "2026-03-10",
+  "download_url": "https://github.com/logtechmoney/GSEQuant_PRO/releases/latest/download/GSEQuant_PRO_v1.0.4.zip",
+  "release_notes": "Features: Tiempos de servicio, circulacion y Aeronaves asistidas. Bugfixes: Sesiones y errores de operaciones. Ruteo continuo",
   "min_launcher_version": "1.0.0",
   "app_exe_name": "GSEQuant_PRO.exe"
 }
