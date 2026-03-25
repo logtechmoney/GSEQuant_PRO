@@ -1,8 +1,8 @@
 {
-  "version": "1.0.4.2",
-  "release_date": "2026-03-11",
-  "download_url": "https://github.com/logtechmoney/GSEQuant_PRO/releases/latest/download/GSEQuant_PRO_v1.0.4.2.zip",
-  "release_notes": "Hotfix 2: Arreglo definitivo para el Crash de Circulacion al regenerar los objetos de base de datos de los gases.",
+  "version": "1.0.4.3",
+  "release_date": "2026-03-25",
+  "download_url": "https://github.com/logtechmoney/GSEQuant_PRO/releases/latest/download/GSEQuant_PRO_v1.0.4.3.zip",
+  "release_notes": "Fixes: importacion de Manga (True/verdadero), conservacion de manga en UI, crasheo step-by-step, edicion y re-uso de IDs de nodo.",
   "min_launcher_version": "1.0.0",
   "app_exe_name": "GSEQuant_PRO.exe"
 }
